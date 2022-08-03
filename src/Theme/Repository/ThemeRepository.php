@@ -2,8 +2,8 @@
 
 namespace Monet\Framework\Theme\Repository;
 
+use Illuminate\Contracts\View\Factory;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\View\ViewFinderInterface;
 use Monet\Framework\Theme\Exception\ThemeNotFoundException;
 use Monet\Framework\Theme\Loader\ThemeLoaderInterface;
 use Monet\Framework\Theme\Theme;
@@ -12,7 +12,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 {
     protected ThemeLoaderInterface $loader;
 
-    protected ViewFinderInterface $view;
+    protected Factory $view;
 
     protected array $themes = [];
 
@@ -20,7 +20,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function __construct(
         ThemeLoaderInterface $loader,
-        ViewFinderInterface  $view
+        Factory              $view
     )
     {
         $this->loader = $loader;
