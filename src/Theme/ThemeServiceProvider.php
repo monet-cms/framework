@@ -23,7 +23,12 @@ class ThemeServiceProvider extends ServiceProvider
         );
         $this->app->singleton(
             ThemeRepositoryInterface::class,
-            ThemeRepository::class
+            function ($app) {
+                return new ThemeRepository(
+                    $app->make(ThemeLoaderInterface::class),
+                    $app->make('view')
+                );
+            }
         );
     }
 
