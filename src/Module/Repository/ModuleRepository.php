@@ -94,7 +94,7 @@ class ModuleRepository
             }
         }
 
-        $this->settings->put(
+        $this->settings->set(
             'monet.modules.all',
             collect($this->modules)
                 ->mapWithKeys(fn(Module $module) => [
