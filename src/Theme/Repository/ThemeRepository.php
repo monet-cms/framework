@@ -240,7 +240,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
         (new ProviderRepository(
             app(),
-            app('filesystem'),
+            app('files'),
             storage_path(Str::snake($theme->getName()).'_theme.php')
         ))->load($theme->getProviders());
     }
