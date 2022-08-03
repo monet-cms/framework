@@ -34,6 +34,7 @@ class ThemeRepository implements ThemeRepositoryInterface
         }
 
         $this->load();
+        $this->cache();
     }
 
     public function register(Theme $theme, bool $activate = false): void
