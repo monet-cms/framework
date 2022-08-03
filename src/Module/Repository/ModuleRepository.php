@@ -265,9 +265,9 @@ class ModuleRepository implements ModuleRepositoryInterface
     {
         $sorter = new FixedArraySort();
 
-        $modules = $this->enabled();
+        $modules = collect($this->enabled());
 
-        collect($modules)->each(function ($module, $name) use ($sorter) {
+        $modules->each(function ($module, $name) use ($sorter) {
             $sorter->add($name, $module->get('dependencies', []));
         });
 
