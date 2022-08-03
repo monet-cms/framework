@@ -3,8 +3,12 @@
 use Monet\Framework\Setting\SettingsManager;
 
 if (!function_exists('settings')) {
-    function settings(): SettingsManager
+    function settings(?string $key = null, $default = null): SettingsManager
     {
+        if (!blank($key)) {
+            return settings_get($key, $default);
+        }
+
         return app('monet.settings');
     }
 }

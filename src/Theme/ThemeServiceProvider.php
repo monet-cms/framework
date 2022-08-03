@@ -33,7 +33,7 @@ class ThemeServiceProvider extends ServiceProvider
 
         $themes->boot();
 
-        $activeTheme = setting('monet.active-theme');
+        $activeTheme = setting()->get('monet.active-theme');
         if ($activeTheme !== null) {
             $themes->activate($activeTheme);
         }
