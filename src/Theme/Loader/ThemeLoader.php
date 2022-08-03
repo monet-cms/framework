@@ -9,7 +9,7 @@ class ThemeLoader implements ThemeLoaderInterface
 {
     public function fromPath(string $path): Theme
     {
-        $jsonPath = realpath($path . DIRECTORY_SEPARATOR . 'composer.json');
+        $jsonPath = realpath($path.DIRECTORY_SEPARATOR.'composer.json');
 
         $json = new Json($jsonPath);
 

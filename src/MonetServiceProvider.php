@@ -15,7 +15,7 @@ class MonetServiceProvider extends AggregateServiceProvider
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/monet.php', 'monet');
+        $this->mergeConfigFrom(__DIR__.'/../config/monet.php', 'monet');
 
         parent::register();
     }

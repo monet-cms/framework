@@ -14,8 +14,8 @@ class ThemeServiceProvider extends EventServiceProvider
 {
     protected $listen = [
         InvalidThemeDisabled::class => [
-            InvalidThemeDisabledListener::class
-        ]
+            InvalidThemeDisabledListener::class,
+        ],
     ];
 
     public function register()

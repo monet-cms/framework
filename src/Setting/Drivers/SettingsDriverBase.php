@@ -21,11 +21,10 @@ abstract class SettingsDriverBase implements SettingsDriverInterface
     protected array $deleted = [];
 
     public function __construct(
-        bool   $cacheEnabled,
+        bool $cacheEnabled,
         string $cacheKey,
-        int    $cacheTtl
-    )
-    {
+        int $cacheTtl
+    ) {
         $this->cacheEnabled = $cacheEnabled;
         $this->cacheKey = $cacheKey;
         $this->cacheTtl = $cacheTtl;
@@ -33,7 +32,7 @@ abstract class SettingsDriverBase implements SettingsDriverInterface
 
     public function get(string $key, $default = null)
     {
-        if (!Arr::has($this->data, $key)) {
+        if (! Arr::has($this->data, $key)) {
             $this->boot($key, $default);
         }
 
@@ -70,13 +69,13 @@ abstract class SettingsDriverBase implements SettingsDriverInterface
 
     protected function loadCache(string $key, $default = null)
     {
-        if (!$this->cacheEnabled) {
+        if (! $this->cacheEnabled) {
             return null;
         }
 
         $cacheKey = $this->getCacheKey($key);
 
-        if (!Cache::has($cacheKey)) {
+        if (! Cache::has($cacheKey)) {
             return null;
         }
 
@@ -85,7 +84,7 @@ abstract class SettingsDriverBase implements SettingsDriverInterface
 
     protected function setCache(string $key, $value)
     {
-        if (!$this->cacheEnabled) {
+        if (! $this->cacheEnabled) {
             return;
         }
 
@@ -97,7 +96,7 @@ abstract class SettingsDriverBase implements SettingsDriverInterface
 
     protected function clearCache(string $key): void
     {
-        if (!$this->cacheEnabled) {
+        if (! $this->cacheEnabled) {
             return;
         }
 
@@ -122,6 +121,6 @@ abstract class SettingsDriverBase implements SettingsDriverInterface
 
     protected function getCacheKey(string $key): string
     {
-        return $this->cacheKey . '.' . $key;
+        return $this->cacheKey.'.'.$key;
     }
 }

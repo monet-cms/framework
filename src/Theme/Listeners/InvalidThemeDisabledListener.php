@@ -18,7 +18,7 @@ class InvalidThemeDisabledListener
     public function handle(InvalidThemeDisabled $event): void
     {
         $fallbackTheme = collect($this->themes->all())
-            ->first(fn(Theme $theme) => $theme->getName() !== $event->theme->getName());
+            ->first(fn (Theme $theme) => $theme->getName() !== $event->theme->getName());
 
         if (
             $fallbackTheme !== null &&

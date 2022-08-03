@@ -17,13 +17,12 @@ class Theme implements Arrayable
     private array $providers = [];
 
     public function __construct(
-        string  $name,
-        string  $description,
-        string  $path,
+        string $name,
+        string $description,
+        string $path,
         ?string $parent = null,
-        array   $providers = []
-    )
-    {
+        array $providers = []
+    ) {
         $this->name = $name;
         $this->description = $description;
         $this->path = $path;
@@ -47,7 +46,7 @@ class Theme implements Arrayable
             return $this->path;
         }
 
-        return realpath($this->path . DIRECTORY_SEPARATOR . ltrim($path, '/\\'));
+        return realpath($this->path.DIRECTORY_SEPARATOR.ltrim($path, '/\\'));
     }
 
     public function getParent(): ?string
@@ -72,7 +71,7 @@ class Theme implements Arrayable
             'description' => $this->getDescription(),
             'path' => $this->getPath(),
             'parent' => $this->getParent(),
-            'providers' => $this->getProviders()
+            'providers' => $this->getProviders(),
         ];
     }
 }

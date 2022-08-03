@@ -20,7 +20,7 @@ class SettingsServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                SettingsTableCommand::class
+                SettingsTableCommand::class,
             ]);
         }
     }
