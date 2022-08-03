@@ -6,13 +6,13 @@ use Monet\Framework\Theme\Theme;
 
 interface ThemeRepositoryInterface
 {
+    public function all(): array;
+
+    public function has(string $name): bool;
+
+    public function get(string $name): ?Theme;
+
     public function boot(): void;
-
-    public function register(Theme $theme, bool $activate = false): void;
-
-    public function registerPath(string $path, bool $activate = false): void;
-
-    public function registerPaths(array $paths, bool $activate = false): void;
 
     public function validate(string|Theme $theme): bool;
 
@@ -20,15 +20,7 @@ interface ThemeRepositoryInterface
 
     public function deactivate(): void;
 
-    public function all(): array;
-
-    public function has(string $name): bool;
-
-    public function get(string $name): ?Theme;
-
     public function active(): ?Theme;
-
-    public function discover(string $path): array;
 
     public function cache(): void;
 

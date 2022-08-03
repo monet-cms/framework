@@ -6,15 +6,15 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class Theme implements Arrayable
 {
-    private string $name;
+    protected string $name;
 
-    private string $description;
+    protected string $description;
 
-    private string $path;
+    protected string $path;
 
-    private ?string $parent;
+    protected ?string $parent;
 
-    private array $providers = [];
+    protected array $providers = [];
 
     public function __construct(
         string  $name,

@@ -42,7 +42,10 @@ return [
 
         'cache' => [
             'enabled' => true,
-            'key' => env('MONET_MODULES_CACHE_KEY', 'monet.modules'),
+            'keys' => [
+                'all' => env('MONET_MODULES_CACHE_ALL_KEY', 'monet.modules.all'),
+                'ordered' => env('MONET_MODULES_CACHE_ORDERED_KEY', 'monet.modules.ordered')
+            ],
         ],
     ],
 ];

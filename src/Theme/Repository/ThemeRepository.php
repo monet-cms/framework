@@ -40,7 +40,7 @@ class ThemeRepository implements ThemeRepositoryInterface
         $this->cache();
     }
 
-    public function register(Theme $theme, bool $activate = false): void
+    protected function register(Theme $theme, bool $activate = false): void
     {
         $name = $theme->getName();
         if (!$this->has($name)) {
@@ -52,7 +52,7 @@ class ThemeRepository implements ThemeRepositoryInterface
         }
     }
 
-    public function registerPath(string $path, bool $activate = false): void
+    protected function registerPath(string $path, bool $activate = false): void
     {
         $path = realpath($path);
         if (!$path) {
@@ -64,7 +64,7 @@ class ThemeRepository implements ThemeRepositoryInterface
         $this->register($theme, $activate);
     }
 
-    public function registerPaths(array $paths, bool $activate = false): void
+    protected function registerPaths(array $paths, bool $activate = false): void
     {
         foreach ($paths as $path) {
             $this->registerPath($path, $activate);
@@ -85,8 +85,8 @@ class ThemeRepository implements ThemeRepositoryInterface
             return false;
         }
 
-        if ($parent = $theme->getParent()) {
-            $parentTheme = $this->get($parent);
+        if ($theme->hasParent()) {
+            $parentTheme = $this->get($theme->getParent());
 
             return $this->validate($parentTheme);
         }
@@ -135,7 +135,7 @@ class ThemeRepository implements ThemeRepositoryInterface
         return $this->activeTheme;
     }
 
-    public function discover(string $path): array
+    protected function discover(string $path): array
     {
         $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'composer.json';
 
