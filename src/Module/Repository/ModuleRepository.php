@@ -99,6 +99,11 @@ class ModuleRepository implements ModuleRepositoryInterface
 
         $module->setStatus($status);
 
+        $this->settings->set(
+            'monet.modules.' . $module->getName(),
+            $status
+        );
+
         $this->clearCache();
     }
 
@@ -163,7 +168,7 @@ class ModuleRepository implements ModuleRepositoryInterface
 
         $modules = [];
 
-        $statuses = $this->settings->get('monet.modules.all', []);
+        $statuses = $this->settings->get('monet.modules', []);
 
         foreach ($paths as $path) {
             $files = $this->discover($path);
