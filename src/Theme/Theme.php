@@ -16,11 +16,12 @@ class Theme implements Arrayable
     private ?string $parent;
 
     public function __construct(
-        string $name,
-        string $description,
-        string $path,
+        string  $name,
+        string  $description,
+        string  $path,
         ?string $parent = null
-    ) {
+    )
+    {
         $this->name = $name;
         $this->description = $description;
         $this->path = $path;
@@ -43,7 +44,7 @@ class Theme implements Arrayable
             return $this->path;
         }
 
-        return realpath($this->path.DIRECTORY_SEPARATOR.$path);
+        return realpath($this->path . DIRECTORY_SEPARATOR . ltrim($path, '/\\'));
     }
 
     public function getParent(): ?string

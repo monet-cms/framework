@@ -51,6 +51,10 @@ class ThemeRepository implements ThemeRepositoryInterface
     public function registerPath(string $path, bool $activate = false): void
     {
         $path = realpath($path);
+        if (!$path) {
+            return;
+        }
+
         $theme = $this->loader->fromPath($path);
 
         $this->register($theme, $activate);
@@ -100,7 +104,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function discover(string $path): array
     {
-        $search = realpath($path . '/theme.json');
+        $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'theme.json';
 
         return str_replace('theme.json', '', $this->getFiles($search));
     }
