@@ -1,9 +1,7 @@
 <?php
 
-use Monet\Framework\Setting\SettingsManager;
-
 if (!function_exists('settings')) {
-    function settings(?string $key = null, $default = null): SettingsManager
+    function settings(?string $key = null, $default = null)
     {
         if (!blank($key)) {
             return settings_get($key, $default);
