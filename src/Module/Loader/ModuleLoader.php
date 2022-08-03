@@ -18,7 +18,7 @@ class ModuleLoader implements ModuleLoaderInterface
             $json->get('description'),
             $json->get('version'),
             $path,
-            false,
+            'disabled',
             $json->get('extra.monet.theme.dependencies', []),
             $json->get('extra.monet.theme.providers', [])
         );
