@@ -13,6 +13,10 @@ class SettingsServiceProvider extends ServiceProvider
     {
         $this->registerManager();
         $this->registerDrivers();
+
+        $this->app->singleton(SettingsTableCommand::class, function ($app) {
+            return new SettingsTableCommand($app['files'], $app['composer']);
+        });
     }
 
     public function boot(): void
