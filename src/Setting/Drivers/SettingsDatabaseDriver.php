@@ -56,7 +56,6 @@ class SettingsDatabaseDriver extends SettingsDriverBase
     {
         $setting = Setting::query()
             ->where($this->keyColumn, '=', $key)
-            ->limit(1)
             ->first('value');
 
         if ($setting !== null) {
