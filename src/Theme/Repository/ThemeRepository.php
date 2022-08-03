@@ -210,7 +210,7 @@ class ThemeRepository implements ThemeRepositoryInterface
             $this->activateFinderPaths($this->get($theme->getParent()));
         }
 
-        $this->view->getFinder()->prependLocation($theme->getPath('views'));
+        $this->view->getFinder()->prependLocation($theme->getPath('resources/views'));
     }
 
     protected function getCacheKey(): string
