@@ -78,7 +78,17 @@ class ThemeRepository implements ThemeRepositoryInterface
             $theme = $this->get($theme);
         }
 
-        return File::exists($theme->getPath('composer.json'));
+        if (!File::exists($theme->getPath('composer.json'))) {
+            return false;
+        }
+
+        if ($parent = $theme->getParent()) {
+            $parentTheme = $this->get($parent);
+
+            return $this->validate($parentTheme);
+        }
+
+        return true;
     }
 
     public function activate(Theme|string $theme): void
