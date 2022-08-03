@@ -14,6 +14,8 @@ interface ThemeRepositoryInterface
 
     public function registerPaths(array $paths, bool $activate = false): void;
 
+    public function validate(string|Theme $theme): bool;
+
     public function activate(string|Theme $theme): void;
 
     public function all(): array;
@@ -22,7 +24,7 @@ interface ThemeRepositoryInterface
 
     public function get(string $name): Theme;
 
-    public function current(): ?Theme;
+    public function active(): ?Theme;
 
     public function discover(string $path): array;
 

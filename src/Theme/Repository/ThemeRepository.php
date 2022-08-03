@@ -4,7 +4,9 @@ namespace Monet\Framework\Theme\Repository;
 
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Support\Facades\Cache;
-use Monet\Framework\Theme\Exception\ThemeNotFoundException;
+use Illuminate\Support\Facades\File;
+use Monet\Framework\Theme\Events\InvalidThemeDisabled;
+use Monet\Framework\Theme\Exceptions\ThemeNotFoundException;
 use Monet\Framework\Theme\Loader\ThemeLoaderInterface;
 use Monet\Framework\Theme\Theme;
 
@@ -68,10 +70,24 @@ class ThemeRepository implements ThemeRepositoryInterface
         }
     }
 
+    public function validate(Theme|string $theme): bool
+    {
+        if (!($theme instanceof Theme)) {
+            $theme = $this->get($theme);
+        }
+
+        return File::exists($theme->getPath('theme.json'));
+    }
+
     public function activate(Theme|string $theme): void
     {
         if (!($theme instanceof Theme)) {
             $theme = $this->get($theme);
+        }
+
+        if (!$this->validate($theme)) {
+            InvalidThemeDisabled::dispatch($theme);
+            return;
         }
 
         $this->activeTheme = $theme;
@@ -98,7 +114,7 @@ class ThemeRepository implements ThemeRepositoryInterface
         return $this->themes[$name];
     }
 
-    public function current(): ?Theme
+    public function active(): ?Theme
     {
         return $this->activeTheme;
     }

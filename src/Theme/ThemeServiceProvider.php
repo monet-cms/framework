@@ -2,16 +2,26 @@
 
 namespace Monet\Framework\Theme;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider;
+use Monet\Framework\Theme\Events\InvalidThemeDisabled;
+use Monet\Framework\Theme\Listeners\InvalidThemeDisabledListener;
 use Monet\Framework\Theme\Loader\ThemeLoader;
 use Monet\Framework\Theme\Loader\ThemeLoaderInterface;
 use Monet\Framework\Theme\Repository\ThemeRepository;
 use Monet\Framework\Theme\Repository\ThemeRepositoryInterface;
 
-class ThemeServiceProvider extends ServiceProvider
+class ThemeServiceProvider extends EventServiceProvider
 {
+    protected $listen = [
+        InvalidThemeDisabled::class => [
+            InvalidThemeDisabledListener::class
+        ]
+    ];
+
     public function register()
     {
+        parent::register();
+
         $this->app->singleton(
             ThemeLoaderInterface::class,
             ThemeLoader::class

@@ -1,6 +1,6 @@
 <?php
 
-namespace Monet\Framework\Theme\Exception;
+namespace Monet\Framework\Theme\Exceptions;
 
 use Exception;
 
