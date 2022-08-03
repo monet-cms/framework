@@ -24,3 +24,10 @@ if (!function_exists('settings_set')) {
         settings()->set($key, $value);
     }
 }
+
+if (!function_exists('settings_forget')) {
+    function settings_forget(string $key): void
+    {
+        settings()->forget($key);
+    }
+}

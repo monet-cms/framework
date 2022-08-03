@@ -28,7 +28,8 @@ class ThemeLoader implements ThemeLoaderInterface
             $cache['name'],
             $cache['description'],
             $cache['path'],
-            $cache['parent']
+            $cache['parent'],
+            $cache['providers']
         );
     }
 }

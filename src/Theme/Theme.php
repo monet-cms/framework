@@ -72,6 +72,7 @@ class Theme implements Arrayable
             'description' => $this->getDescription(),
             'path' => $this->getPath(),
             'parent' => $this->getParent(),
+            'providers' => $this->getProviders()
         ];
     }
 }

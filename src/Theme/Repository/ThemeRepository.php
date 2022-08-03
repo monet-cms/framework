@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Monet\Framework\Theme\Events\InvalidThemeDisabled;
+use Monet\Framework\Theme\Exceptions\ActiveThemeDisabledException;
 use Monet\Framework\Theme\Exceptions\ThemeNotFoundException;
 use Monet\Framework\Theme\Loader\ThemeLoaderInterface;
 use Monet\Framework\Theme\Theme;
@@ -74,21 +75,25 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function validate(Theme|string $theme): bool
     {
-        if (!($theme instanceof Theme)) {
-            $theme = $this->get($theme);
-        }
+        try {
+            if (!($theme instanceof Theme)) {
+                $theme = $this->get($theme);
+            }
 
-        if (!File::exists($theme->getPath('composer.json'))) {
+            if (!File::exists($theme->getPath('composer.json'))) {
+                return false;
+            }
+
+            if ($parent = $theme->getParent()) {
+                $parentTheme = $this->get($parent);
+
+                return $this->validate($parentTheme);
+            }
+
+            return true;
+        } catch (ActiveThemeDisabledException) {
             return false;
         }
-
-        if ($parent = $theme->getParent()) {
-            $parentTheme = $this->get($parent);
-
-            return $this->validate($parentTheme);
-        }
-
-        return true;
     }
 
     public function activate(Theme|string $theme): void
