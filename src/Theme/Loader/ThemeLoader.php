@@ -4,13 +4,12 @@ namespace Monet\Framework\Theme\Loader;
 
 use Monet\Framework\Support\Json;
 use Monet\Framework\Theme\Theme;
-use stdClass;
 
 class ThemeLoader implements ThemeLoaderInterface
 {
     public function fromPath(string $path): Theme
     {
-        $jsonPath = realpath($path.DIRECTORY_SEPARATOR.'theme.json');
+        $jsonPath = realpath($path . DIRECTORY_SEPARATOR . 'theme.json');
 
         $json = new Json($jsonPath);
 
@@ -22,13 +21,13 @@ class ThemeLoader implements ThemeLoaderInterface
         );
     }
 
-    public function fromCache(stdClass $cache): Theme
+    public function fromCache(array $cache): Theme
     {
         return new Theme(
-            $cache->name,
-            $cache->description,
-            $cache->path,
-            $cache->parent
+            $cache['name'],
+            $cache['description'],
+            $cache['path'],
+            $cache['parent']
         );
     }
 }
