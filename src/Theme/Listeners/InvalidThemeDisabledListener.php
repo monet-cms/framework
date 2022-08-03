@@ -10,9 +10,7 @@ class InvalidThemeDisabledListener
 {
     protected ThemeRepositoryInterface $theme;
 
-    public function __construct(
-        ThemeRepositoryInterface $themes
-    )
+    public function __construct(ThemeRepositoryInterface $themes)
     {
         $this->themes = $themes;
     }

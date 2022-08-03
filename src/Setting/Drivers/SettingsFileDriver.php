@@ -49,6 +49,7 @@ class SettingsFileDriver extends SettingsDriverBase
         }
 
         $this->data = $value;
+        $this->booted = true;
     }
 
     protected function loadCache(string $key, $default = null)
