@@ -243,7 +243,6 @@ class ThemeRepository implements ThemeRepositoryInterface
             app(),
             app('files'),
             storage_path(
-                'app/' .
                 Str::snake(str_replace([
                     '/',
                     '\\'
