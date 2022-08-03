@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Monet\Framework\Theme\Events\InvalidThemeDisabled;
-use Monet\Framework\Theme\Exceptions\ActiveThemeDisabledException;
 use Monet\Framework\Theme\Loader\ThemeLoaderInterface;
 use Monet\Framework\Theme\Theme;
 
@@ -95,12 +94,8 @@ class ThemeRepository implements ThemeRepositoryInterface
         return true;
     }
 
-    public function activate(Theme|string $theme): void
+    public function activate(Theme $theme): void
     {
-        if (!($theme instanceof Theme)) {
-            $theme = $this->get($theme);
-        }
-
         if (!$this->validate($theme)) {
             InvalidThemeDisabled::dispatch($theme);
             return;

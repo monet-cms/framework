@@ -16,7 +16,7 @@ interface ThemeRepositoryInterface
 
     public function validate(string|Theme $theme): bool;
 
-    public function activate(string|Theme $theme): void;
+    public function activate(Theme $theme): void;
 
     public function deactivate(): void;
 
