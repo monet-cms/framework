@@ -243,10 +243,12 @@ class ThemeRepository implements ThemeRepositoryInterface
             app(),
             app('files'),
             storage_path(
+                'app/' .
                 Str::snake(str_replace([
                     '/',
                     '\\'
-                ], '_', $theme->getName())) . '_theme.php'
+                ], '_', $theme->getName())) .
+                '_theme.php'
             )
         ))->load($theme->getProviders());
     }
