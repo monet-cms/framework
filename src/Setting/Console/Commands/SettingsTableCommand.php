@@ -3,7 +3,7 @@
 namespace Monet\Framework\Setting\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
 use Symfony\Component\Console\Attribute\AsCommand;
 
