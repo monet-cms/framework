@@ -23,8 +23,9 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function __construct(
         ThemeLoaderInterface $loader,
-        Factory $view
-    ) {
+        Factory              $view
+    )
+    {
         $this->loader = $loader;
         $this->view = $view;
     }
@@ -42,7 +43,7 @@ class ThemeRepository implements ThemeRepositoryInterface
     public function register(Theme $theme, bool $activate = false): void
     {
         $name = $theme->getName();
-        if (! $this->has($name)) {
+        if (!$this->has($name)) {
             $this->themes[$name] = $theme;
         }
 
@@ -54,7 +55,7 @@ class ThemeRepository implements ThemeRepositoryInterface
     public function registerPath(string $path, bool $activate = false): void
     {
         $path = realpath($path);
-        if (! $path) {
+        if (!$path) {
             return;
         }
 
@@ -72,7 +73,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function validate(Theme|string $theme): bool
     {
-        if (! ($theme instanceof Theme)) {
+        if (!($theme instanceof Theme)) {
             $theme = $this->get($theme);
         }
 
@@ -80,7 +81,7 @@ class ThemeRepository implements ThemeRepositoryInterface
             return false;
         }
 
-        if (! File::exists($theme->getPath('composer.json'))) {
+        if (!File::exists($theme->getPath('composer.json'))) {
             return false;
         }
 
@@ -95,7 +96,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function activate(Theme $theme): void
     {
-        if (! $this->validate($theme)) {
+        if (!$this->validate($theme)) {
             InvalidThemeDisabled::dispatch($theme);
 
             return;
@@ -136,7 +137,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function discover(string $path): array
     {
-        $search = rtrim($path, '/\\').DIRECTORY_SEPARATOR.'composer.json';
+        $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'composer.json';
 
         return str_replace('composer.json', '', $this->getFiles($search));
     }
@@ -153,7 +154,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function clearCache(): void
     {
-        if (! config('monet.themes.cache.enabled')) {
+        if (!config('monet.themes.cache.enabled')) {
             return;
         }
 
@@ -172,13 +173,13 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     protected function loadCache(): bool
     {
-        if (! config('monet.themes.cache.enabled')) {
+        if (!config('monet.themes.cache.enabled')) {
             return false;
         }
 
         $key = $this->getCacheKey();
 
-        if (! Cache::has($key)) {
+        if (!Cache::has($key)) {
             return false;
         }
 
@@ -202,11 +203,11 @@ class ThemeRepository implements ThemeRepositoryInterface
         $files = [];
 
         $directories = glob(
-            dirname($pattern).DIRECTORY_SEPARATOR.'*',
+            dirname($pattern) . DIRECTORY_SEPARATOR . '*',
             GLOB_ONLYDIR | GLOB_NOSORT
         );
 
-        if (! $directories) {
+        if (!$directories) {
             $directories = [];
         }
 
@@ -214,7 +215,7 @@ class ThemeRepository implements ThemeRepositoryInterface
             $files = array_merge(
                 $files,
                 $this->getFiles(
-                    $directory.DIRECTORY_SEPARATOR.basename($pattern),
+                    $directory . DIRECTORY_SEPARATOR . basename($pattern),
                     $flags
                 )
             );
@@ -241,7 +242,12 @@ class ThemeRepository implements ThemeRepositoryInterface
         (new ProviderRepository(
             app(),
             app('files'),
-            storage_path(Str::snake($theme->getName()).'_theme.php')
+            storage_path(
+                Str::snake(str_replace([
+                    '/',
+                    '\\'
+                ], '_', $theme->getName())) . '_theme.php'
+            )
         ))->load($theme->getProviders());
     }
 
