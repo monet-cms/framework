@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string($keyColumn)->unique();
             $table->json($valueColumn);
+            $table->timestamps();
         });
     }
 

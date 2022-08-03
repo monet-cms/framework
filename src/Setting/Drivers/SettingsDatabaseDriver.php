@@ -11,12 +11,13 @@ class SettingsDatabaseDriver extends SettingsDriverBase
     protected string $valueColumn;
 
     public function __construct(
-        bool $cacheEnabled,
+        bool   $cacheEnabled,
         string $cacheKey,
-        int $cacheTtl,
+        int    $cacheTtl,
         string $keyColumn,
         string $valueColumn
-    ) {
+    )
+    {
         parent::__construct($cacheEnabled, $cacheKey, $cacheTtl);
 
         $this->keyColumn = $keyColumn;
@@ -25,10 +26,10 @@ class SettingsDatabaseDriver extends SettingsDriverBase
 
     public function save(): void
     {
-        if (! empty($this->updated)) {
+        if (!empty($this->updated)) {
             Setting::query()
                 ->upsert(
-                    collect($this->updated)->map(fn (string $key) => [
+                    collect($this->updated)->map(fn(string $key) => [
                         $this->keyColumn => $key,
                         $this->valueColumn => $this->encode($this->get($key)),
                     ])->toArray(),
@@ -40,7 +41,7 @@ class SettingsDatabaseDriver extends SettingsDriverBase
             }
         }
 
-        if (! empty($this->deleted)) {
+        if (!empty($this->deleted)) {
             Setting::query()
                 ->whereIn($this->keyColumn, '=', $this->deleted)
                 ->delete();
@@ -53,13 +54,13 @@ class SettingsDatabaseDriver extends SettingsDriverBase
 
     protected function load(string $key, $default = null)
     {
-        $value = Setting::query()
+        $setting = Setting::query()
             ->where($this->keyColumn, '=', $key)
             ->limit(1)
-            ->first();
+            ->first('value');
 
-        if ($value !== null) {
-            return $this->decode($value);
+        if ($setting !== null) {
+            return $this->decode($setting->value);
         }
 
         return $default;
