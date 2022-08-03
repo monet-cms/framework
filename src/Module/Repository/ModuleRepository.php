@@ -88,7 +88,9 @@ class ModuleRepository
 
                 $name = $module->getName();
 
-                $module->setStatus($statuses[$name] ?? false);
+                if (isset($statuses[$name])) {
+                    $module->setStatus($statuses[$name]);
+                }
 
                 $modules[$name] = $module;
             }
