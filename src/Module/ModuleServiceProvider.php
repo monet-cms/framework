@@ -19,7 +19,7 @@ class ModuleServiceProvider extends ServiceProvider
 
         $this->app->alias(
             ModuleRepositoryInterface::class,
-            'monet.theme'
+            'monet.modules'
         );
         $this->app->singleton(
             ModuleRepositoryInterface::class,

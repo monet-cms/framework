@@ -29,7 +29,7 @@ class ThemeServiceProvider extends EventServiceProvider
 
         $this->app->alias(
             ThemeRepositoryInterface::class,
-            'monet.theme'
+            'monet.themes'
         );
         $this->app->singleton(
             ThemeRepositoryInterface::class,
