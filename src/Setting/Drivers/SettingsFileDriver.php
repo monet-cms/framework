@@ -14,12 +14,13 @@ class SettingsFileDriver extends SettingsDriverBase
     protected bool $booted = false;
 
     public function __construct(
-        bool $cacheEnabled,
-        string $cacheKey,
-        int $cacheTtl,
-        string $path,
+        bool       $cacheEnabled,
+        string     $cacheKey,
+        int        $cacheTtl,
+        string     $path,
         Filesystem $files
-    ) {
+    )
+    {
         parent::__construct($cacheEnabled, $cacheKey, $cacheTtl);
 
         $this->path = $path;
@@ -33,6 +34,8 @@ class SettingsFileDriver extends SettingsDriverBase
         }
 
         $this->files->put($this->path, $this->encode($this->data));
+
+        $this->setCache('file', $this->data);
     }
 
     protected function boot(string $key, $default = null): void
@@ -50,13 +53,13 @@ class SettingsFileDriver extends SettingsDriverBase
 
     protected function loadCache(string $key, $default = null)
     {
-        if (! $this->cacheEnabled) {
+        if (!$this->cacheEnabled) {
             return null;
         }
 
         $cacheKey = $this->getCacheKey($key);
 
-        if (! Cache::has($cacheKey)) {
+        if (!Cache::has($cacheKey)) {
             return null;
         }
 
@@ -65,10 +68,15 @@ class SettingsFileDriver extends SettingsDriverBase
 
     protected function load(string $key, $default = null)
     {
-        if (! $this->files->exists($this->path)) {
+        if (!$this->files->exists($this->path)) {
             return [];
         }
 
         return $this->decode($this->files->get($this->path));
+    }
+
+    protected function getCacheKey(string $key): string
+    {
+        return $this->cacheKey;
     }
 }
