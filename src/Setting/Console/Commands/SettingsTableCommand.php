@@ -32,7 +32,9 @@ class SettingsTableCommand extends Command
     {
         $fullPath = $this->createBaseMigration();
 
-        $this->components->info('Path: ' . __DIR__ . '/../stubs/database/create_settings_table.php');
+//        $this->components->info('Path: ' . __DIR__ . '/../stubs/database/create_settings_table.php');
+
+        $this->components->info('Exists: ' . file_exists(__DIR__ . '/../stubs/database/create_settings_table.php'));
 
         $this->files->put(
             $fullPath,
