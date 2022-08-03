@@ -18,6 +18,8 @@ interface ThemeRepositoryInterface
 
     public function activate(string|Theme $theme): void;
 
+    public function deactivate(): void;
+
     public function all(): array;
 
     public function has(string $name): bool;

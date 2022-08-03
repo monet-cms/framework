@@ -5,6 +5,7 @@ namespace Monet\Framework\Theme\Listeners;
 use Monet\Framework\Theme\Events\InvalidThemeDisabled;
 use Monet\Framework\Theme\Exceptions\ActiveThemeDisabledException;
 use Monet\Framework\Theme\Repository\ThemeRepositoryInterface;
+use Monet\Framework\Theme\Theme;
 
 class InvalidThemeDisabledListener
 {
@@ -17,10 +18,15 @@ class InvalidThemeDisabledListener
 
     public function handle(InvalidThemeDisabled $event): void
     {
-        $activeTheme = $this->themes->active();
-        if ($activeTheme === null) {
-            throw new ActiveThemeDisabledException($event->theme);
+        $fallbackTheme = collect($this->themes->all())
+            ->first(fn(Theme $theme) => $theme->getName() !== $event->theme->getName());
+
+        if ($fallbackTheme !== null
+            && $this->themes->validate($fallbackTheme)) {
+            $this->themes->activate($fallbackTheme);
         }
+
+        $this->themes->clearCache();
 
         session()->flash(
             'theme.error',

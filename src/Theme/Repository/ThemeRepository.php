@@ -114,6 +114,12 @@ class ThemeRepository implements ThemeRepositoryInterface
         $this->registerProviders($theme);
     }
 
+    public function deactivate(): void
+    {
+        $this->activeTheme = null;
+        $this->clearCache();
+    }
+
     public function all(): array
     {
         return $this->themes;
@@ -157,6 +163,10 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function clearCache(): void
     {
+        if (!config('monet.themes.cache.enabled')) {
+            return;
+        }
+
         Cache::forget($this->getCacheKey());
     }
 
