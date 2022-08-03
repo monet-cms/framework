@@ -39,7 +39,7 @@ class ThemeServiceProvider extends EventServiceProvider
 
     public function boot()
     {
-        $themes = $this->app->make('monet.theme');
+        $themes = $this->app->make('monet.themes');
 
         $themes->boot();
 

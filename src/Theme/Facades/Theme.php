@@ -8,6 +8,6 @@ class Theme extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'monet.theme';
+        return 'monet.themes';
     }
 }
