@@ -44,8 +44,11 @@ class ThemeServiceProvider extends EventServiceProvider
         $themes->boot();
 
         $activeTheme = settings('monet.active-theme');
-        if ($activeTheme !== null) {
-            $themes->activate($activeTheme);
+        if (
+            $activeTheme !== null &&
+            $theme = $themes->get($activeTheme)
+        ) {
+            $themes->activate($theme);
         }
     }
 }
