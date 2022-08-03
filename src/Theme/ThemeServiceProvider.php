@@ -26,4 +26,16 @@ class ThemeServiceProvider extends ServiceProvider
             ThemeRepository::class
         );
     }
+
+    public function boot()
+    {
+        $themes = $this->app->make('monet.theme');
+
+        $themes->boot();
+
+        $activeTheme = setting('monet.active-theme');
+        if ($activeTheme !== null) {
+            $themes->activate($activeTheme);
+        }
+    }
 }

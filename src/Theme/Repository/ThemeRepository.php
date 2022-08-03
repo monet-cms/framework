@@ -20,8 +20,9 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function __construct(
         ThemeLoaderInterface $loader,
-        ViewFinderInterface $view
-    ) {
+        ViewFinderInterface  $view
+    )
+    {
         $this->loader = $loader;
         $this->view = $view;
     }
@@ -38,7 +39,7 @@ class ThemeRepository implements ThemeRepositoryInterface
     public function register(Theme $theme, bool $activate = false): void
     {
         $name = $theme->getName();
-        if (! $this->has($name)) {
+        if (!$this->has($name)) {
             $this->themes[$name] = $theme;
         }
 
@@ -64,7 +65,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function activate(Theme|string $theme): void
     {
-        if (! ($theme instanceof Theme)) {
+        if (!($theme instanceof Theme)) {
             $theme = $this->get($theme);
         }
 
@@ -85,7 +86,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function get(string $name): Theme
     {
-        if (! $this->has($name)) {
+        if (!$this->has($name)) {
             throw new ThemeNotFoundException($name);
         }
 
@@ -99,7 +100,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function discover(string $path): array
     {
-        $search = realpath($path.'/theme.json');
+        $search = realpath($path . '/theme.json');
 
         return str_replace('theme.json', '', $this->getFiles($search));
     }
@@ -107,8 +108,8 @@ class ThemeRepository implements ThemeRepositoryInterface
     public function cache(): void
     {
         $json = [];
-        foreach ($this->themes as $name => $theme) {
-            $json[$name] = $theme->toArray();
+        foreach ($this->themes as $theme) {
+            $json[] = $theme->toArray();
         }
 
         Cache::forever($this->getCacheKey(), $json);
@@ -131,20 +132,20 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     protected function loadCache(): bool
     {
-        if (! config('monet.themes.cache.enabled')) {
+        if (!config('monet.themes.cache.enabled')) {
             return false;
         }
 
         $key = $this->getCacheKey();
 
-        if (! Cache::has($key)) {
+        if (!Cache::has($key)) {
             return false;
         }
 
         $themes = Cache::get($key);
 
-        foreach ($themes as $name => $theme) {
-            $this->themes[$name] = $this->loader->fromCache($theme);
+        foreach ($themes as $theme) {
+            $this->register($this->loader->fromCache($theme));
         }
 
         return true;
@@ -161,11 +162,11 @@ class ThemeRepository implements ThemeRepositoryInterface
         $files = [];
 
         $directories = glob(
-            dirname($pattern).DIRECTORY_SEPARATOR.'*',
+            dirname($pattern) . DIRECTORY_SEPARATOR . '*',
             GLOB_ONLYDIR | GLOB_NOSORT
         );
 
-        if (! $directories) {
+        if (!$directories) {
             $directories = [];
         }
 
@@ -173,7 +174,7 @@ class ThemeRepository implements ThemeRepositoryInterface
             $files = array_merge(
                 $files,
                 $this->getFiles(
-                    $directory.DIRECTORY_SEPARATOR.basename($pattern),
+                    $directory . DIRECTORY_SEPARATOR . basename($pattern),
                     $flags
                 )
             );
