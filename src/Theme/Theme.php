@@ -3,7 +3,6 @@
 namespace Monet\Framework\Theme;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Str;
 
 class Theme implements Arrayable
 {
@@ -15,17 +14,21 @@ class Theme implements Arrayable
 
     private ?string $parent;
 
+    private array $providers = [];
+
     public function __construct(
         string  $name,
         string  $description,
         string  $path,
-        ?string $parent = null
+        ?string $parent = null,
+        array   $providers = []
     )
     {
         $this->name = $name;
         $this->description = $description;
         $this->path = $path;
         $this->parent = $parent;
+        $this->providers = $providers;
     }
 
     public function getName(): string
@@ -57,9 +60,9 @@ class Theme implements Arrayable
         return $this->parent !== null;
     }
 
-    public function getAssetPath(): string
+    public function getProviders(): array
     {
-        return Str::slug($this->getName());
+        return $this->providers;
     }
 
     public function toArray()

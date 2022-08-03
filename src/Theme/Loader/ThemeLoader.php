@@ -9,7 +9,7 @@ class ThemeLoader implements ThemeLoaderInterface
 {
     public function fromPath(string $path): Theme
     {
-        $jsonPath = realpath($path . DIRECTORY_SEPARATOR . 'theme.json');
+        $jsonPath = realpath($path . DIRECTORY_SEPARATOR . 'composer.json');
 
         $json = new Json($jsonPath);
 
@@ -17,7 +17,8 @@ class ThemeLoader implements ThemeLoaderInterface
             $json->get('name'),
             $json->get('description'),
             $path,
-            $json->get('parent')
+            $json->get('extra.monet.theme.parent'),
+            $json->get('extra.monet.theme.providers', [])
         );
     }
 

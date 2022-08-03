@@ -3,8 +3,10 @@
 namespace Monet\Framework\Theme\Repository;
 
 use Illuminate\Contracts\View\Factory;
+use Illuminate\Foundation\ProviderRepository;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Monet\Framework\Theme\Events\InvalidThemeDisabled;
 use Monet\Framework\Theme\Exceptions\ThemeNotFoundException;
 use Monet\Framework\Theme\Loader\ThemeLoaderInterface;
@@ -76,7 +78,7 @@ class ThemeRepository implements ThemeRepositoryInterface
             $theme = $this->get($theme);
         }
 
-        return File::exists($theme->getPath('theme.json'));
+        return File::exists($theme->getPath('composer.json'));
     }
 
     public function activate(Theme|string $theme): void
@@ -93,6 +95,8 @@ class ThemeRepository implements ThemeRepositoryInterface
         $this->activeTheme = $theme;
 
         $this->activateFinderPaths($theme);
+
+        $this->registerProviders($theme);
     }
 
     public function all(): array
@@ -121,9 +125,9 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function discover(string $path): array
     {
-        $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'theme.json';
+        $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'composer.json';
 
-        return str_replace('theme.json', '', $this->getFiles($search));
+        return str_replace('composer.json', '', $this->getFiles($search));
     }
 
     public function cache(): void
@@ -211,6 +215,19 @@ class ThemeRepository implements ThemeRepositoryInterface
         }
 
         $this->view->getFinder()->prependLocation($theme->getPath('resources/views'));
+    }
+
+    protected function registerProviders(Theme $theme): void
+    {
+        if (empty($theme->getProviders())) {
+            return;
+        }
+
+        (new ProviderRepository(
+            app(),
+            app('filesystem'),
+            storage_path(Str::snake($theme->getName()) . '_theme.php')
+        ))->load($theme->getProviders());
     }
 
     protected function getCacheKey(): string
