@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Monet\Framework\Theme\Events\InvalidThemeDisabled;
 use Monet\Framework\Theme\Exceptions\ActiveThemeDisabledException;
-use Monet\Framework\Theme\Exceptions\ThemeNotFoundException;
 use Monet\Framework\Theme\Loader\ThemeLoaderInterface;
 use Monet\Framework\Theme\Theme;
 
@@ -75,25 +74,25 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     public function validate(Theme|string $theme): bool
     {
-        try {
-            if (!($theme instanceof Theme)) {
-                $theme = $this->get($theme);
-            }
+        if (!($theme instanceof Theme)) {
+            $theme = $this->get($theme);
+        }
 
-            if (!File::exists($theme->getPath('composer.json'))) {
-                return false;
-            }
-
-            if ($parent = $theme->getParent()) {
-                $parentTheme = $this->get($parent);
-
-                return $this->validate($parentTheme);
-            }
-
-            return true;
-        } catch (ActiveThemeDisabledException) {
+        if ($theme === null) {
             return false;
         }
+
+        if (!File::exists($theme->getPath('composer.json'))) {
+            return false;
+        }
+
+        if ($parent = $theme->getParent()) {
+            $parentTheme = $this->get($parent);
+
+            return $this->validate($parentTheme);
+        }
+
+        return true;
     }
 
     public function activate(Theme|string $theme): void
@@ -130,13 +129,9 @@ class ThemeRepository implements ThemeRepositoryInterface
         return isset($this->themes[$name]);
     }
 
-    public function get(string $name): Theme
+    public function get(string $name): ?Theme
     {
-        if (!$this->has($name)) {
-            throw new ThemeNotFoundException($name);
-        }
-
-        return $this->themes[$name];
+        return $this->themes[$name] ?? null;
     }
 
     public function active(): ?Theme

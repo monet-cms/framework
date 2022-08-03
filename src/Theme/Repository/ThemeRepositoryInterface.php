@@ -24,7 +24,7 @@ interface ThemeRepositoryInterface
 
     public function has(string $name): bool;
 
-    public function get(string $name): Theme;
+    public function get(string $name): ?Theme;
 
     public function active(): ?Theme;
 
