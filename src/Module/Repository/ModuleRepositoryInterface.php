@@ -8,19 +8,21 @@ interface ModuleRepositoryInterface
 {
     public function all(): array;
 
-    public function has(string $name): bool;
+    public function ordered(): array;
+
+    public function enabled(): array;
+
+    public function disabled(): array;
+
+    public function status(string $status): array;
+
+    public function enable(Module|string $module): void;
+
+    public function disable(Module|string $module): void;
+
+    public function setStatus(Module|string $module, string $status): void;
 
     public function get(string $name): ?Module;
-
-    public function boot(): void;
-
-    public function validate(string|Module $module): bool;
-
-    public function enable(Module $theme): void;
-
-    public function deactivate(): void;
-
-    public function active(): ?Module;
 
     public function cache(): void;
 

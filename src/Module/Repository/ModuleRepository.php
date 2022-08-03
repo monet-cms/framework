@@ -3,11 +3,14 @@
 namespace Monet\Framework\Module\Repository;
 
 use Illuminate\Support\Facades\Cache;
+use MJS\TopSort\CircularDependencyException;
+use MJS\TopSort\ElementNotFoundException;
+use MJS\TopSort\Implementations\FixedArraySort;
 use Monet\Framework\Module\Loader\ModuleLoaderInterface;
 use Monet\Framework\Module\Module;
 use Monet\Framework\Setting\SettingsManager;
 
-class ModuleRepository
+class ModuleRepository implements ModuleRepositoryInterface
 {
     protected ModuleLoaderInterface $loader;
 
@@ -34,10 +37,74 @@ class ModuleRepository
 
         if (!($modules = $this->loadCache())) {
             $modules = $this->load();
-            $this->cache();
         }
 
         return $this->modules = $modules;
+    }
+
+    public function ordered(): array
+    {
+        if ($this->orderedModules !== null) {
+            return $this->orderedModules;
+        }
+
+        if (!($modules = $this->loadOrderedCache())) {
+            $modules = $this->loadOrdered();
+            $this->cache();
+        }
+
+        return $this->orderedModules = $modules;
+    }
+
+    public function enabled(): array
+    {
+        return collect($this->modules)
+            ->filter(fn(Module $module) => $module->enabled())
+            ->all();
+    }
+
+    public function disabled(): array
+    {
+        return collect($this->modules)
+            ->filter(fn(Module $module) => $module->disabled())
+            ->all();
+    }
+
+    public function status(string $status): array
+    {
+        return collect($this->modules)
+            ->filter(fn(Module $module) => $module->getStatus() === $status)
+            ->all();
+    }
+
+    public function enable(Module|string $module): void
+    {
+        $this->setStatus($module, 'enabled');
+    }
+
+    public function disable(Module|string $module): void
+    {
+        $this->setStatus($module, 'disabled');
+    }
+
+    public function setStatus(Module|string $module, string $status): void
+    {
+        if (!($module instanceof Module)) {
+            $module = $this->get($module);
+        }
+
+        if ($module === null) {
+            return;
+        }
+
+        $module->setStatus($status);
+
+        $this->clearCache();
+    }
+
+    public function get(string $name): ?Module
+    {
+        return $this->modules[$name] ?? null;
     }
 
     public function cache(): void
@@ -55,6 +122,24 @@ class ModuleRepository
                 ])
                 ->all()
         );
+
+        $orderedCacheKey = config('monet.modules.cache.keys.ordered');
+        Cache::forever(
+            $orderedCacheKey,
+            collect($this->ordered())
+                ->map(fn(Module $module) => $module->getName())
+                ->all()
+        );
+    }
+
+    public function clearCache(): void
+    {
+        if (!config('monet.modules.cache.enabled')) {
+            return;
+        }
+
+        Cache::forget(config('monet.modules.cache.keys.all'));
+        Cache::forget(config('monet.modules.cache.keys.ordered'));
     }
 
     protected function loadCache(): ?array
@@ -96,13 +181,43 @@ class ModuleRepository
             }
         }
 
-        $this->settings->set(
-            'monet.modules.all',
-            collect($this->modules)
-                ->mapWithKeys(fn(Module $module) => [
-                    $module->getName() => $module->getStatus()
-                ])
-        );
+        return $modules;
+    }
+
+    protected function loadOrderedCache(): ?array
+    {
+        if (!config('monet.modules.cache.enabled')) {
+            return null;
+        }
+
+        $cacheKey = config('monet.modules.cache.keys.ordered');
+
+        if (!Cache::has($cacheKey)) {
+            return null;
+        }
+
+        $modules = [];
+
+        $names = Cache::get($cacheKey, []);
+        foreach ($names as $name) {
+            if ($module = $this->get($name)) {
+                $modules[] = $module;
+            }
+        }
+
+        return $modules;
+    }
+
+    protected function loadOrdered(): array
+    {
+        $modules = [];
+
+        $names = $this->getOrderedNames();
+        foreach ($names as $name) {
+            if ($module = $this->get($name)) {
+                $modules[] = $module;
+            }
+        }
 
         return $modules;
     }
@@ -144,5 +259,33 @@ class ModuleRepository
         }
 
         return $files;
+    }
+
+    protected function getOrderedNames(): array
+    {
+        $sorter = new FixedArraySort();
+
+        $modules = $this->enabled();
+
+        collect($modules)->each(function ($module, $name) use ($sorter) {
+            $sorter->add($name, $module->get('dependencies', []));
+        });
+
+        $names = [];
+
+        $maxAttempts = $modules->count();
+
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            try {
+                $names = $sorter->sort();
+                break;
+            } catch (CircularDependencyException $e) {
+                $this->disable($e->getNodes());
+            } catch (ElementNotFoundException $e) {
+                $this->disable($e->getSource());
+            }
+        }
+
+        return $names;
     }
 }
