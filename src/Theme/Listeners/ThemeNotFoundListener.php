@@ -2,11 +2,11 @@
 
 namespace Monet\Framework\Theme\Listeners;
 
-use Monet\Framework\Theme\Events\InvalidThemeDisabled;
+use Monet\Framework\Theme\Events\ThemeNotFound;
 use Monet\Framework\Theme\Repository\ThemeRepositoryInterface;
 use Monet\Framework\Theme\Theme;
 
-class InvalidThemeDisabledListener
+class ThemeNotFoundListener
 {
     protected ThemeRepositoryInterface $themes;
 
@@ -15,10 +15,10 @@ class InvalidThemeDisabledListener
         $this->themes = $themes;
     }
 
-    public function handle(InvalidThemeDisabled $event): void
+    public function handle(ThemeNotFound $event): void
     {
         $fallbackTheme = collect($this->themes->all())
-            ->first(fn(Theme $theme) => $theme->getName() !== $event->theme->getName());
+            ->first(fn(Theme $theme) => $theme->getName() !== $event->theme);
 
         if (
             $fallbackTheme !== null &&
@@ -32,8 +32,8 @@ class InvalidThemeDisabledListener
         session()->flash(
             'theme.error',
             sprintf(
-                'The theme "%s" has errors and has been disabled.',
-                $event->theme->getName()
+                'The theme "%s" cannot be found and has been disabled.',
+                $event->theme
             )
         );
     }
