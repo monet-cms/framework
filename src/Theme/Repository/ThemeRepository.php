@@ -139,7 +139,7 @@ class ThemeRepository implements ThemeRepositoryInterface
     {
         $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'composer.json';
 
-        return str_replace('composer.json', '', $this->getFiles($search));
+        return str_replace('composer.json', '', File::find($search));
     }
 
     public function cache(): void
@@ -190,38 +190,6 @@ class ThemeRepository implements ThemeRepositoryInterface
         }
 
         return true;
-    }
-
-    protected function getFiles(string $pattern, int $flags = 0): array
-    {
-        $files = glob($pattern, $flags);
-
-        if ($files) {
-            return $files;
-        }
-
-        $files = [];
-
-        $directories = glob(
-            dirname($pattern) . DIRECTORY_SEPARATOR . '*',
-            GLOB_ONLYDIR | GLOB_NOSORT
-        );
-
-        if (!$directories) {
-            $directories = [];
-        }
-
-        foreach ($directories as $directory) {
-            $files = array_merge(
-                $files,
-                $this->getFiles(
-                    $directory . DIRECTORY_SEPARATOR . basename($pattern),
-                    $flags
-                )
-            );
-        }
-
-        return $files;
     }
 
     protected function activateFinderPaths(Theme $theme): void

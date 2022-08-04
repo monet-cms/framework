@@ -3,6 +3,7 @@
 namespace Monet\Framework\Module\Repository;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use MJS\TopSort\CircularDependencyException;
 use MJS\TopSort\ElementNotFoundException;
 use MJS\TopSort\Implementations\FixedArraySort;
