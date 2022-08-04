@@ -17,7 +17,7 @@ class ThemeRepository implements ThemeRepositoryInterface
 
     protected Factory $view;
 
-    protected array $themes = [];
+    protected array $themes;
 
     protected ?Theme $activeTheme = null;
 
@@ -40,6 +40,42 @@ class ThemeRepository implements ThemeRepositoryInterface
         $this->cache();
     }
 
+    protected function loadCache(): bool
+    {
+        if (!config('monet.themes.cache.enabled')) {
+            return false;
+        }
+
+        $key = $this->getCacheKey();
+
+        if (!Cache::has($key)) {
+            return false;
+        }
+
+        $themes = Cache::get($key);
+
+        foreach ($themes as $theme) {
+            $this->register($this->loader->fromCache($theme));
+        }
+
+        return true;
+    }
+
+    protected function getCacheKey(): string
+    {
+        return config('monet.themes.cache.key');
+    }
+
+    public function has(string $name): bool
+    {
+        return isset($this->themes[$name]);
+    }
+
+    public function get(string $name): ?Theme
+    {
+        return $this->themes[$name] ?? null;
+    }
+
     protected function register(Theme $theme, bool $activate = false): void
     {
         $name = $theme->getName();
@@ -52,23 +88,19 @@ class ThemeRepository implements ThemeRepositoryInterface
         }
     }
 
-    protected function registerPath(string $path, bool $activate = false): void
+    public function activate(Theme $theme): void
     {
-        $path = realpath($path);
-        if (!$path) {
+        if (!$this->validate($theme)) {
+            InvalidThemeDisabled::dispatch($theme);
+
             return;
         }
 
-        $theme = $this->loader->fromPath($path);
+        $this->activeTheme = $theme;
 
-        $this->register($theme, $activate);
-    }
+        $this->activateFinderPaths($theme);
 
-    protected function registerPaths(array $paths, bool $activate = false): void
-    {
-        foreach ($paths as $path) {
-            $this->registerPath($path, $activate);
-        }
+        $this->registerProviders($theme);
     }
 
     public function validate(Theme|string $theme): bool
@@ -89,104 +121,6 @@ class ThemeRepository implements ThemeRepositoryInterface
             $parentTheme = $this->get($theme->getParent());
 
             return $this->validate($parentTheme);
-        }
-
-        return true;
-    }
-
-    public function activate(Theme $theme): void
-    {
-        if (!$this->validate($theme)) {
-            InvalidThemeDisabled::dispatch($theme);
-
-            return;
-        }
-
-        $this->activeTheme = $theme;
-
-        $this->activateFinderPaths($theme);
-
-        $this->registerProviders($theme);
-    }
-
-    public function deactivate(): void
-    {
-        $this->activeTheme = null;
-        $this->clearCache();
-    }
-
-    public function all(): array
-    {
-        return $this->themes;
-    }
-
-    public function has(string $name): bool
-    {
-        return isset($this->themes[$name]);
-    }
-
-    public function get(string $name): ?Theme
-    {
-        return $this->themes[$name] ?? null;
-    }
-
-    public function active(): ?Theme
-    {
-        return $this->activeTheme;
-    }
-
-    protected function discover(string $path): array
-    {
-        $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'composer.json';
-
-        return str_replace('composer.json', '', File::find($search));
-    }
-
-    public function cache(): void
-    {
-        $json = [];
-        foreach ($this->themes as $theme) {
-            $json[] = $theme->toArray();
-        }
-
-        Cache::forever($this->getCacheKey(), $json);
-    }
-
-    public function clearCache(): void
-    {
-        if (!config('monet.themes.cache.enabled')) {
-            return;
-        }
-
-        Cache::forget($this->getCacheKey());
-    }
-
-    protected function load(): void
-    {
-        $paths = config('monet.themes.paths');
-
-        foreach ($paths as $path) {
-            $files = $this->discover($path);
-            $this->registerPaths($files);
-        }
-    }
-
-    protected function loadCache(): bool
-    {
-        if (!config('monet.themes.cache.enabled')) {
-            return false;
-        }
-
-        $key = $this->getCacheKey();
-
-        if (!Cache::has($key)) {
-            return false;
-        }
-
-        $themes = Cache::get($key);
-
-        foreach ($themes as $theme) {
-            $this->register($this->loader->fromCache($theme));
         }
 
         return true;
@@ -220,8 +154,76 @@ class ThemeRepository implements ThemeRepositoryInterface
         ))->load($theme->getProviders());
     }
 
-    protected function getCacheKey(): string
+    protected function load(): void
     {
-        return config('monet.themes.cache.key');
+        $paths = config('monet.themes.paths');
+
+        $this->themes = [];
+
+        foreach ($paths as $path) {
+            $files = $this->discover($path);
+            $this->registerPaths($files);
+        }
+    }
+
+    protected function discover(string $path): array
+    {
+        $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'composer.json';
+
+        return str_replace('composer.json', '', File::find($search));
+    }
+
+    protected function registerPaths(array $paths, bool $activate = false): void
+    {
+        foreach ($paths as $path) {
+            $this->registerPath($path, $activate);
+        }
+    }
+
+    protected function registerPath(string $path, bool $activate = false): void
+    {
+        $path = realpath($path);
+        if (!$path) {
+            return;
+        }
+
+        $theme = $this->loader->fromPath($path);
+
+        $this->register($theme, $activate);
+    }
+
+    public function cache(): void
+    {
+        $json = [];
+        foreach ($this->themes as $theme) {
+            $json[] = $theme->toArray();
+        }
+
+        Cache::forever($this->getCacheKey(), $json);
+    }
+
+    public function deactivate(): void
+    {
+        $this->activeTheme = null;
+        $this->clearCache();
+    }
+
+    public function clearCache(): void
+    {
+        if (!config('monet.themes.cache.enabled')) {
+            return;
+        }
+
+        Cache::forget($this->getCacheKey());
+    }
+
+    public function all(): array
+    {
+        return $this->themes;
+    }
+
+    public function active(): ?Theme
+    {
+        return $this->activeTheme;
     }
 }

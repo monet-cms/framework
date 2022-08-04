@@ -9,83 +9,135 @@ use MJS\TopSort\ElementNotFoundException;
 use MJS\TopSort\Implementations\FixedArraySort;
 use Monet\Framework\Module\Loader\ModuleLoaderInterface;
 use Monet\Framework\Module\Module;
-use Monet\Framework\Setting\SettingsManager;
 
 class ModuleRepository implements ModuleRepositoryInterface
 {
     protected ModuleLoaderInterface $loader;
 
-    protected SettingsManager $settings;
+    protected array $modules;
 
-    protected ?array $modules = null;
+    protected array $ordered;
 
-    protected ?array $orderedModules = null;
-
-    public function __construct(
-        ModuleLoaderInterface $loader,
-        SettingsManager       $settings
-    )
+    public function __construct(ModuleLoaderInterface $loader)
     {
         $this->loader = $loader;
-        $this->settings = $settings;
+    }
+
+    public function boot(): void
+    {
+        if ($this->loadCache() && $this->loadOrderedCache()) {
+            return;
+        }
+
+        $this->load();
+        $this->loadOrdered();
+
+        $this->cache();
+    }
+
+    protected function loadCache(): bool
+    {
+        if (!config('monet.modules.cache.enabled')) {
+            return false;
+        }
+
+        $cacheKey = config('monet.modules.cache.keys.all');
+
+        $modules = Cache::get($cacheKey);
+        if ($modules === null) {
+            return false;
+        }
+
+        $this->modules = [];
+        foreach ($modules as $name => $module) {
+            $this->modules[$name] = $this->loader->fromCache($module);
+        }
+
+        return true;
+    }
+
+    public function get(string $name): ?Module
+    {
+        return $this->all()[$name] ?? null;
     }
 
     public function all(): array
     {
-        if ($this->modules !== null) {
-            return $this->modules;
+        return $this->modules;
+    }
+
+    protected function loadOrderedCache(): bool
+    {
+        if (!config('monet.modules.cache.enabled')) {
+            return false;
         }
 
-        if (!($modules = $this->loadCache())) {
-            $modules = $this->load();
+        $cacheKey = config('monet.modules.cache.keys.ordered');
+
+        $modules = Cache::get($cacheKey);
+        if ($modules === null) {
+            return false;
         }
 
-        return $this->modules = $modules;
-    }
-
-    public function ordered(): array
-    {
-        if ($this->orderedModules !== null) {
-            return $this->orderedModules;
+        $this->ordered = [];
+        foreach ($modules as $name) {
+            if ($module = $this->get($name)) {
+                $this->ordered[] = $module;
+            }
         }
 
-        if (!($modules = $this->loadOrderedCache())) {
-            $modules = $this->loadOrdered();
-            $this->cache();
+        return true;
+    }
+
+    protected function load(): void
+    {
+        $paths = config('monet.modules.paths');
+
+        $this->modules = [];
+
+        foreach ($paths as $path) {
+            $files = $this->discover($path);
+            $this->registerPaths($files);
         }
 
-        return $this->orderedModules = $modules;
+        $statuses = settings('monet.modules', []);
+        foreach ($statuses as $name => $status) {
+            $this->setStatus($name, $status);
+        }
     }
 
-    public function enabled(): array
+    protected function discover(string $path): array
     {
-        return collect($this->modules)
-            ->filter(fn(Module $module) => $module->enabled())
-            ->all();
+        $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'composer.json';
+
+        return str_replace('composer.json', '', File::find($search));
     }
 
-    public function disabled(): array
+    protected function registerPaths(array $paths): void
     {
-        return collect($this->modules)
-            ->filter(fn(Module $module) => $module->disabled())
-            ->all();
+        foreach ($paths as $path) {
+            $this->registerPath($path);
+        }
     }
 
-    public function status(string $status): array
+    protected function registerPath(string $path): void
     {
-        return collect($this->modules)
-            ->filter(fn(Module $module) => $module->getStatus() === $status)
-            ->all();
+        $path = realpath($path);
+        if (!$path) {
+            return;
+        }
+
+        $theme = $this->loader->fromPath($path);
+
+        $name = $theme->getName();
+        if (!$this->has($name)) {
+            $this->modules[$name] = $theme;
+        }
     }
 
-    public function enable(Module|string $module): void
+    public function has(string $name): bool
     {
-        $this->setStatus($module, 'enabled');
-    }
-
-    public function disable(Module|string $module): void
-    {
-        $this->setStatus($module, 'disabled');
+        return isset($this->modules[$name]);
     }
 
     public function setStatus(Module|string $module, string $status): void
@@ -100,42 +152,12 @@ class ModuleRepository implements ModuleRepositoryInterface
 
         $module->setStatus($status);
 
-        $this->settings->set(
+        settings_set(
             'monet.modules.' . $module->getName(),
             $status
         );
 
         $this->clearCache();
-    }
-
-    public function get(string $name): ?Module
-    {
-        return $this->modules[$name] ?? null;
-    }
-
-    public function cache(): void
-    {
-        if (!config('monet.modules.cache.enabled')) {
-            return;
-        }
-
-        $allCacheKey = config('monet.modules.cache.keys.all');
-        Cache::forever(
-            $allCacheKey,
-            collect($this->modules)
-                ->mapWithKeys(fn(Module $module) => [
-                    $module->getName() => $module->toArray()
-                ])
-                ->all()
-        );
-
-        $orderedCacheKey = config('monet.modules.cache.keys.ordered');
-        Cache::forever(
-            $orderedCacheKey,
-            collect($this->ordered())
-                ->map(fn(Module $module) => $module->getName())
-                ->all()
-        );
     }
 
     public function clearCache(): void
@@ -148,150 +170,126 @@ class ModuleRepository implements ModuleRepositoryInterface
         Cache::forget(config('monet.modules.cache.keys.ordered'));
     }
 
-    protected function loadCache(): ?array
+    protected function loadOrdered(): void
     {
-        if (!config('monet.modules.cache.enabled')) {
-            return null;
-        }
-
-        $cacheKey = config('monet.modules.cache.keys.all');
-
-        if (!Cache::has($cacheKey)) {
-            return null;
-        }
-
-        return Cache::get($cacheKey, []);
-    }
-
-    protected function load(): array
-    {
-        $paths = config('monet.modules.paths');
-
-        $modules = [];
-
-        $statuses = $this->settings->get('monet.modules', []);
-
-        foreach ($paths as $path) {
-            $files = $this->discover($path);
-
-            foreach ($files as $file) {
-                $module = $this->loader->fromPath($file);
-
-                $name = $module->getName();
-
-                if (isset($statuses[$name])) {
-                    $module->setStatus($statuses[$name]);
-                }
-
-                $modules[$name] = $module;
-            }
-        }
-
-        return $modules;
-    }
-
-    protected function loadOrderedCache(): ?array
-    {
-        if (!config('monet.modules.cache.enabled')) {
-            return null;
-        }
-
-        $cacheKey = config('monet.modules.cache.keys.ordered');
-
-        if (!Cache::has($cacheKey)) {
-            return null;
-        }
-
-        $modules = [];
-
-        $names = Cache::get($cacheKey, []);
-        foreach ($names as $name) {
-            if ($module = $this->get($name)) {
-                $modules[] = $module;
-            }
-        }
-
-        return $modules;
-    }
-
-    protected function loadOrdered(): array
-    {
-        $modules = [];
+        $this->ordered = [];
 
         $names = $this->getOrderedNames();
         foreach ($names as $name) {
             if ($module = $this->get($name)) {
-                $modules[] = $module;
+                $this->ordered[$name] = $module;
             }
         }
-
-        return $modules;
-    }
-
-    protected function discover(string $path): array
-    {
-        $search = rtrim($path, '/\\') . DIRECTORY_SEPARATOR . 'composer.json';
-
-        return str_replace('composer.json', '', $this->getFiles($search));
-    }
-
-    protected function getFiles(string $pattern, int $flags = 0): array
-    {
-        $files = glob($pattern, $flags);
-
-        if ($files) {
-            return $files;
-        }
-
-        $files = [];
-
-        $directories = glob(
-            dirname($pattern) . DIRECTORY_SEPARATOR . '*',
-            GLOB_ONLYDIR | GLOB_NOSORT
-        );
-
-        if (!$directories) {
-            $directories = [];
-        }
-
-        foreach ($directories as $directory) {
-            $files = array_merge(
-                $files,
-                $this->getFiles(
-                    $directory . DIRECTORY_SEPARATOR . basename($pattern),
-                    $flags
-                )
-            );
-        }
-
-        return $files;
     }
 
     protected function getOrderedNames(): array
     {
         $sorter = new FixedArraySort();
 
-        $modules = collect($this->enabled());
-
-        $modules->each(function ($module, $name) use ($sorter) {
-            $sorter->add($name, $module->get('dependencies', []));
-        });
+        $modules = $this->enabled();
+        foreach ($modules as $name => $module) {
+            $sorter->add($name, $module->getDependencies());
+        }
 
         $names = [];
 
-        $maxAttempts = $modules->count();
+        $maxAttempts = count($modules);
 
         for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
             try {
                 $names = $sorter->sort();
                 break;
             } catch (CircularDependencyException $e) {
-                $this->disable($e->getNodes());
+                foreach ($e->getNodes() as $name) {
+                    $this->disable($name);
+                }
             } catch (ElementNotFoundException $e) {
                 $this->disable($e->getSource());
             }
         }
 
         return $names;
+    }
+
+    public function enabled(): array
+    {
+        return collect($this->all())
+            ->filter(fn(Module $module) => $module->enabled())
+            ->all();
+    }
+
+    public function disable(Module|string $module): void
+    {
+        $this->setStatus($module, 'disabled');
+    }
+
+    public function cache(): void
+    {
+        if (!config('monet.modules.cache.enabled')) {
+            return;
+        }
+
+        Cache::forever(
+            config('monet.modules.cache.keys.all'),
+            collect($this->modules)
+                ->mapWithKeys(fn(Module $module) => [
+                    $module->getName() => $module->toArray()
+                ])
+                ->all()
+        );
+
+        Cache::forever(
+            config('monet.modules.cache.keys.ordered'),
+            collect($this->ordered)
+                ->map(fn(Module $module) => $module->getName())
+                ->all()
+        );
+    }
+
+    public function ordered(): array
+    {
+        return $this->ordered;
+    }
+
+    public function disabled(): array
+    {
+        return collect($this->all())
+            ->where(fn(Module $module) => $module->disabled())
+            ->all();
+    }
+
+    public function status(string $status): array
+    {
+        return collect($this->all())
+            ->where(fn(Module $module) => $module->getStatus() === $status)
+            ->all();
+    }
+
+    public function enable(Module|string $module): void
+    {
+        $this->setStatus($module, 'enabled');
+    }
+
+    public function validate(Module|string $module): bool
+    {
+        if (!($module instanceof Module)) {
+            $module = $this->get($module);
+        }
+
+        if ($module === null) {
+            return false;
+        }
+
+        if (!File::exists($module->getPath('composer.json'))) {
+            return false;
+        }
+
+        foreach ($module->getDependencies() as $name) {
+            if (!$this->validate($name)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

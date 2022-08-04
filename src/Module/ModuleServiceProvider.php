@@ -26,4 +26,11 @@ class ModuleServiceProvider extends ServiceProvider
             ModuleRepository::class
         );
     }
+
+    public function boot(): void
+    {
+        $themes = $this->app->make('monet.modules');
+
+        $themes->boot();
+    }
 }

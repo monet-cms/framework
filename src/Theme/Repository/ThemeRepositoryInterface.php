@@ -6,13 +6,13 @@ use Monet\Framework\Theme\Theme;
 
 interface ThemeRepositoryInterface
 {
+    public function boot(): void;
+
     public function all(): array;
 
     public function has(string $name): bool;
 
     public function get(string $name): ?Theme;
-
-    public function boot(): void;
 
     public function validate(string|Theme $theme): bool;
 
